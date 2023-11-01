@@ -1,19 +1,20 @@
-uint32_t CAN_ID = 1; //小米电机canid
-double R_MIN_RAD_S = 3.1415926535 / 30;
+uint32_t CAN_ID = 1; // Xiaomi 모터의 CAN ID
+double R_MIN_RAD_S = 3.1415926535 / 30; // 최소 라디안 속도
 
 #define Master_CAN_ID 0x00
 
-#define Communication_Type_GetID 0x00     //获取设备的ID和64位MCU唯一标识符
-#define Communication_Type_MotionControl 0x01 	//用来向主机发送控制指令
-#define Communication_Type_MotorRequest 0x02	//用来向主机反馈电机运行状态
-#define Communication_Type_MotorEnable 0x03	//电机使能运行
-#define Communication_Type_MotorStop 0x04	//电机停止运行
-#define Communication_Type_SetPosZero 0x06	//设置电机机械零位
-#define Communication_Type_CanID 0x07	//更改当前电机CAN_ID
+// 통신 유형 정의
+#define Communication_Type_GetID 0x00     // 장치의 ID 및 64비트 MCU 고유 식별자 얻기
+#define Communication_Type_MotionControl 0x01 	// 제어 명령 전송
+#define Communication_Type_MotorRequest 0x02	// 모터 상태 피드백
+#define Communication_Type_MotorEnable 0x03	// 모터 활성화
+#define Communication_Type_MotorStop 0x04	// 모터 정지
+#define Communication_Type_SetPosZero 0x06	// 모터 영점 설정
+#define Communication_Type_CanID 0x07	// 현재 모터 CAN_ID 변경
 #define Communication_Type_Control_Mode 0x12
-#define Communication_Type_GetSingleParameter 0x11	//读取单个参数
-#define Communication_Type_SetSingleParameter 0x12	//设定单个参数
-#define Communication_Type_ErrorFeedback 0x15	//故障反馈帧
+#define Communication_Type_GetSingleParameter 0x11	
+#define Communication_Type_SetSingleParameter 0x12	
+#define Communication_Type_ErrorFeedback 0x15
 
 #define Run_mode 0x7005	
 #define Iq_Ref 0x7006
@@ -52,10 +53,6 @@ double R_MIN_RAD_S = 3.1415926535 / 30;
 
 /*Functions------------------------------------------------------------------*/
 
-/*******************************************************************************
-* @function     : 浮点数转4字节函数
-* @param        : 浮点数 4字节数组
-*******************************************************************************/
 void Float_to_Byte(float f, uint8_t byte[4]) {
   unsigned long longdata = *(unsigned long*)&f;       
   byte[0] = (longdata >> 24) & 0xFF;
@@ -104,25 +101,11 @@ void send_command(uint32_t id_num, uint8_t cmd_mode, uint8_t* tx_data)
     delay(1);
 }
 
-
-
-/*******************************************************************************
-* @function     : 电机参数初始化
-* @param        : 1. 电机结构体 2.电机CANID 3.电机编号 4.电机工作模式（1.运动模式 2. 位置模式 3. 速度模式 4. 电流模式）
-* @return       : None
-* @description  : 负责初始化电机 CANID 电机编号 电机的工作模式
-*******************************************************************************/
 void Init_Motor(uint32_t Can_Id,float mode){
 	Enable_Motor(Can_Id);
   Set_Mode(Can_Id,mode);
 }
 
-/*******************************************************************************
-* @function     : 使能电机
-* @param        : 对应控制电机结构体
-* @return       : None
-* @description  : 使能电机
-*******************************************************************************/
 void Enable_Motor(uint32_t CAN_ID){
 	uint32_t Send_ID;
 	uint8_t temp[8]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -130,13 +113,6 @@ void Enable_Motor(uint32_t CAN_ID){
 
 }
 
-
-/*******************************************************************************
-* @function     : 停止电机
-* @param        : 1.对应控制电机结构体 2.清除错误位（0 不清除 1清除）
-* @return       : None
-* @description  : 使能电机
-*******************************************************************************/
 void Stop_Motor(uint32_t CAN_ID, uint8_t clear_error){
 	uint32_t Send_ID;
 	uint8_t temp[8]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -144,12 +120,6 @@ void Stop_Motor(uint32_t CAN_ID, uint8_t clear_error){
   send_command(CAN_ID, 4, temp); 
 }
 
-/*******************************************************************************
-* @function     : 写入电机参数
-* @param        : 1.对应控制电机结构体 2.写入参数对应地址 3.写入参数值 4.写入参数数据类型
-* @return       : None
-* @description  : None
-*******************************************************************************/
 void Set_Motor_Parameter(uint32_t CAN_ID,uint16_t Index,float Value,char Value_type){
 	uint32_t Send_ID;
 	uint8_t Send_Data[8];
@@ -177,65 +147,41 @@ void Set_Motor_Parameter(uint32_t CAN_ID,uint16_t Index,float Value,char Value_t
 	//Send_Msg(Send_Data,Send_ID);	
 }
 
-/*******************************************************************************
-* @function     : 设置电机控制模式
-* @param        : %2
-* @return       : %3
-* @description  : %4
-*******************************************************************************/
 void Set_Mode(uint32_t CAN_ID ,float Mode){
   Set_Motor_Parameter(CAN_ID,0x7005	,Mode,'s');
 }
 
 /* Exported function declarations --------------------------------------------*/
 
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200); // Serial用于连接can模块驱动小米电机
-  Serial1.begin(115200);// Serial1用于打印调试数据
-  // put function declarations here:
+void setup()
+{
+  Serial.begin(115200); // Serial은 Xiaomi 모터를 제어하기 위한 CAN 모듈에 연결
+  Serial1.begin(115200); // Serial1은 디버그 데이터를 출력
 }
 
 
-void loop() {  
-  //发送电机模式参数写入命令 
-  /*******************************************************************************
-* @function     : 电机参数初始化
-* @param        : 1. 电机CANID 2.电机工作模式（1.运动模式 2. 位置模式 3. 速度模式 4. 电流模式）
-* @return       : None
-* @description  : 负责初始化电机 CANID 电机编号 电机的工作模式
-*******************************************************************************/
+void loop()
+{  
   Init_Motor(CAN_ID,  Speed_mode);
   Set_Motor_Parameter(CAN_ID,  Spd_Ref,  0 * R_MIN_RAD_S,  'f');
   delay(1000);
-  //--> 发送电机模式参数写入命令(通信类型 18)设 置 spd_ref 参数为预设速度指令   
-  /*******************************************************************************
-  * @function     : 写入电机参数
-  * @param        : 1.电机CANID 2.写入参数对应地址 3.写入参数值 4.写入参数数据类型
-  * @return       : None
-  * @description  : None
-  *******************************************************************************/
+
   Set_Motor_Parameter(CAN_ID,  Limit_Cur,  15,  'f');
   Set_Motor_Parameter(CAN_ID,  Spd_Ref,  50 * R_MIN_RAD_S,  'f');
 
   delay(1000);
   Set_Motor_Parameter(CAN_ID,  Spd_Ref,  500 * R_MIN_RAD_S,  'f');
   delay(1000);
-  //--> 发送电机停止运行帧(通信类型 4)
-  /*******************************************************************************
-  * @function     : 停止电机
-  * @param        : 1.对应控制电机结构体 2.清除错误位（0 不清除 1清除）
-  * @return       : None
-  * @description  : 使能电机
-  *******************************************************************************/
+
   Stop_Motor(CAN_ID,  1);
   delay(1000);
 }
-//五条命令的指令
-// 170 1 0 8 3 0 0 1 0 0 0 0 0 0 0 0  使能
-// 170 1 0 8 18 0 0 1 5 112 0 0 2 0 0 0  设置为运动模式
-// 170 1 0 8 18 0 0 1 24 112 0 0 0 0 112 65  设置电流参数
-// 170 1 0 8 18 0 0 1 10 112 0 0 210 83 251 65  设置速度参数
-// 170 1 0 8 4 0 0 1 1 0 0 0 0 0 0 0 停机
+
+// 명령 예제
+// 170 1 0 8 3 0 0 1 0 0 0 0 0 0 0 0  활성화
+// 170 1 0 8 18 0 0 1 5 112 0 0 2 0 0 0  운동 모드로 설정
+// 170 1 0 8 18 0 0 1 24 112 0 0 0 0 112 65  전류 매개변수 설정
+// 170 1 0 8 18 0 0 1 10 112 0 0 210 83 251 65  속도 매개변수 설정
+// 170 1 0 8 4 0 0 1 1 0 0 0 0 0 0 0 정지
 
 
